@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+
+<style>
+html, body {
+    margin:0;
+    height:100%;
+}
+
+#map {
+    width:100%;
+    height:100vh;
+}
+
+.crime-icon {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
+}
+
+.crime-homicidio {
+    background: orange;
+    border-radius: 50%;
+}
+
+.crime-robo {
+    background: red;
+    border-radius: 0;
+}
+
+.crime-hurto {
+    background: blue;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.crime-narcotrafico {
+    background: green;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.crime-violencia {
+    background: darkpurple;
+    border-radius: 20% / 50%;
+}
+
+.crime-otro {
+    background: gray;
+    border-radius: 50%;
+}
+
+.filter-box {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-width: 200px;
+}
+
+.filter-box label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.filter-box select {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+.legend {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-width: 170px;
+}
+
+
+.legend2 {
+    position: fixed;
+    bottom: 22px;
+    right: 240px; 
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-width: 170px;
+}
+
+.legend3 {
+    position: fixed;
+    bottom: 22px;
+    right: 460px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-width: 220px;
+}
+
+.legend3 .legend-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+}
+
+.legend3 .legend-count {
+    font-weight: 700;
+    color: #1f4468;
+}
+
+.legend4 {
+    position: fixed;
+    bottom: 22px;
+    left: 22px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-width: 220px;
+    max-width: 260px;
+}
+
+.legend4 .legend-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend4 .legend-count {
+    font-weight: 700;
+    color: #c41e3a;
+    text-align: right;
+}
+
+.legend-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-item:last-child {
+    margin-bottom: 0;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.legend-count {
+    margin-left: auto;
+    font-weight: 700;
+    color: #111;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.legend-item:last-child {
+    margin-bottom: 0;
+}
+
+.legend-homicidio { background: orange; }
+.legend-robo { background: red; }
+.legend-hurto { background: blue; }
+.legend-narcotrafico { background: green; }
+.legend-violencia { background: darkpurple; }
+/* Popup card styles */
+.popup-card {
+    width: 260px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #222;
+}
+.popup-row {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+}
+.popup-badge {
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    display:inline-block;
+    border:1px solid rgba(0,0,0,0.08);
+}
+.badge-homicidio { background: orange }
+.badge-robo { background: red }
+.badge-hurto { background: blue }
+.badge-narcotrafico { background: green }
+.badge-violencia { background: rebeccapurple }
+.popup-title { font-weight:700; font-size:14px; }
+.popup-sub { color:#666; font-size:12px; margin-bottom:8px; }
+.popup-summary { color:#333; max-height:80px; overflow:auto; }
+.popup-link { display:inline-block; margin-top:8px; color:#0b6efd; text-decoration:none; }
+.popup-link:hover { text-decoration:underline; }</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="filter-box">
+    <label for="tipo-delito-filter">Filtrar por tipo de delito</label>
+    <select id="tipo-delito-filter">
+        <option value="todos">Todos los delitos</option>
+    </select>
+
+    <label for="ciudad-filter" style="margin-top:10px;">Filtrar por ciudad</label>
+    <select id="ciudad-filter">
+        <option value="todas">Todas las ciudades</option>
+    </select>
+
+    <!-- <label for="temporal-filter" style="margin-top:10px;">Filtrar por periodo</label>
+    <select id="temporal-filter">
+        <option value="todos">Todo el periodo</option>
+        <option value="hoy">Hoy</option>
+        <option value="7dias">Últimos 7 días</option>
+        <option value="30dias">Últimos 30 días</option>
+        <option value="anio">Este año</option>
+        <option value="rango">Rango personalizado</option>
+    </select> -->
+
+    <div id="custom-range" style="display:none; margin-top:8px;">
+        <label style="font-weight:600; font-size:12px;">Rango personalizado</label>
+        <input type="date" id="desde-fecha" style="width:100%; margin-top:6px; padding:6px; border-radius:6px; border:1px solid #ccc;" />
+        <input type="date" id="hasta-fecha" style="width:100%; margin-top:6px; padding:6px; border-radius:6px; border:1px solid #ccc;" />
+        <button id="aplicar-rango" style="width:100%; margin-top:8px; padding:8px; border-radius:8px; border:none; background:#0b6efd; color:#fff;">Aplicar</button>
+    </div>
+</div>
+<div class="legend" id="legend">
+    <div class="legend-title">Tipos de Delito</div>
+    <div class="legend-item"><span class="legend-color legend-homicidio"></span>Homicidio</div>
+    <div class="legend-item"><span class="legend-color legend-robo"></span>Robo / Asalto</div>
+    <div class="legend-item"><span class="legend-color legend-hurto"></span>Hurto</div>
+    <div class="legend-item"><span class="legend-color legend-narcotrafico"></span>Narcotráfico</div>
+    <div class="legend-item"><span class="legend-color legend-violencia"></span>Violencia / Otros</div>
+</div>
+
+<div class="legend2" id="legend2">
+    <div class="legend-title">Cantidad de Delitos</div>
+    <div class="legend-item"><span class="legend-color legend-homicidio"></span>Homicidio <span class="legend-count" id="count-homicidio">0</span></div>
+    <div class="legend-item"><span class="legend-color legend-robo"></span>Robo / Asalto <span class="legend-count" id="count-robo">0</span></div>
+    <div class="legend-item"><span class="legend-color legend-hurto"></span>Hurto <span class="legend-count" id="count-hurto">0</span></div>
+    <div class="legend-item"><span class="legend-color legend-narcotrafico"></span>Narcotráfico <span class="legend-count" id="count-narcotrafico">0</span></div>
+    <div class="legend-item"><span class="legend-color legend-violencia"></span>Violencia / Otros <span class="legend-count" id="count-violencia">0</span></div>
+</div>
+
+<div class="legend3" id="legend3">
+    <div class="legend-title">Fuente de Información</div>
+    <div class="legend-item" style="font-size:12px; color:#555; margin-bottom:8px;">
+        Total registros con fuente: <strong id="source-total">0</strong>
+    </div>
+    <div id="source-stats-list">
+        <div class="legend-item" style="font-size:12px; color:#555;">Cargando fuentes...</div>
+    </div>
+</div>
+
+<div class="legend4" id="legend4">
+    <div class="legend-title">🔴 Ciudades con Más Delitos</div>
+    <div id="city-stats-list">
+        <div class="legend-item" style="font-size:12px; color:#555;">Cargando ciudades...</div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<script>
+
+const map = L.map('map')
+.setView([-25.2822, -57.6359], 13);
+
+L.tileLayer(
+'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&apistyle=s.t:2|p.v:off', {
+    attribution: '&copy; Google Maps',
+    maxZoom: 20
+}
+).addTo(map);
+
+const markersLayer = L.markerClusterGroup();
+markersLayer.addTo(map);
+let heatLayer;
+const markerItems = [];
+const filterContainer = document.getElementById('tipo-delito-filter');
+const ciudadFilter = document.getElementById('ciudad-filter');
+
+function getMarkerIcon(tipo) {
+    const lower = (tipo || '').toLowerCase();
+
+    if (lower.includes('robo') || lower.includes('asalto') || lower.includes('hurto')) {
+        return L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/69/69192.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+    }else if
+
+    (lower.includes('homicidio') ) {
+        return L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/9875/9875127.png' ,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+    }
+
+
+    else if(lower.includes('narcotrafico') || lower.includes('lavado de dinero') ) {
+        return L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/13647/13647761.png' ,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+    }
+    else if(lower.includes('armas') ) {
+        return L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/1/1680.png' ,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+    }else if (lower.includes('hurto') ){
+         return L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/1/1680.png' ,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+    }
+    
+    
+    else {
+
+            return L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/189/189665.png' ,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+    }
+    
+
+    let className = 'crime-otro';
+       
+
+
+    return L.divIcon({
+        className: `crime-icon ${className}`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+    });
+}
+
+function getBadgeClass(tipo) {
+    const lower = (tipo || '').toLowerCase();
+    if (lower.includes('homicidio')) return 'badge-homicidio';
+    if (lower.includes('robo') || lower.includes('asalto')) return 'badge-robo';
+    if (lower.includes('hurto')) return 'badge-hurto';
+    if (lower.includes('droga') || lower.includes('narcotrafico')) return 'badge-narcotrafico';
+    if (lower.includes('violencia') || lower.includes('agresion')) return 'badge-violencia';
+    return 'badge-otro';
+}
+
+function normalizeCrimeType(tipo) {
+    const lower = (tipo || '').toLowerCase();
+    if (lower.includes('homicidio')) return 'homicidio';
+    if (lower.includes('robo') || lower.includes('asalto')) return 'robo';
+    if (lower.includes('hurto')) return 'hurto';
+    if (lower.includes('droga') || lower.includes('narcotrafico')) return 'narcotrafico';
+    return 'violencia';
+}
+
+function updateCrimeCounts(items) {
+    const counts = {
+        homicidio: 0,
+        robo: 0,
+        hurto: 0,
+        narcotrafico: 0,
+        violencia: 0
+    };
+
+    items.forEach(item => {
+        const type = normalizeCrimeType(item.tipo);
+        counts[type] = (counts[type] || 0) + 1;
+    });
+
+    document.getElementById('count-homicidio').textContent = counts.homicidio;
+    document.getElementById('count-robo').textContent = counts.robo;
+    document.getElementById('count-hurto').textContent = counts.hurto;
+    document.getElementById('count-narcotrafico').textContent = counts.narcotrafico;
+    document.getElementById('count-violencia').textContent = counts.violencia;
+}
+
+function updateCityCounts(items) {
+    const cityCounts = {};
+
+    items.forEach(item => {
+        const ciudad = item.ciudad ? item.ciudad.trim() : 'Desconocida';
+        cityCounts[ciudad] = (cityCounts[ciudad] || 0) + 1;
+    });
+
+    const sortedCities = Object.entries(cityCounts)
+        .sort((a, b) => b[1] - a[1]);
+
+    const statsList = document.getElementById('city-stats-list');
+    statsList.innerHTML = '';
+
+    if (!sortedCities.length) {
+        statsList.innerHTML = '<div class="legend-item" style="font-size:12px; color:#555;">No hay datos de ciudades.</div>';
+        return;
+    }
+
+    sortedCities.slice(0, 5).forEach(([ciudad, count], index) => {
+        const cityRow = document.createElement('div');
+        cityRow.className = 'legend-item';
+        cityRow.innerHTML = `<span style="flex:1;">#${index + 1} ${ciudad}</span><span class="legend-count">${count}</span>`;
+        statsList.appendChild(cityRow);
+    });
+}
+
+function extractSourceHostname(url) {
+    try {
+        const parsed = new URL(url);
+        return parsed.hostname.replace(/^www\./i, '') || 'Desconocida';
+    } catch (error) {
+        return 'Desconocida';
+    }
+}
+
+function updateSourceStats(items) {
+    const sourceCounts = {};
+    let totalSources = 0;
+
+    items.forEach(item => {
+        const host = extractSourceHostname(item.url_fuente || item.url || '');
+        sourceCounts[host] = (sourceCounts[host] || 0) + 1;
+        totalSources += 1;
+    });
+
+    const sortedSources = Object.entries(sourceCounts)
+        .sort((a, b) => b[1] - a[1]);
+
+    const statsList = document.getElementById('source-stats-list');
+    statsList.innerHTML = '';
+    document.getElementById('source-total').textContent = totalSources;
+
+    if (!sortedSources.length) {
+        statsList.innerHTML = '<div class="legend-item" style="font-size:12px; color:#555;">No hay datos de fuentes.</div>';
+        return;
+    }
+
+    sortedSources.slice(0, 5).forEach(([host, count]) => {
+        const percent = Math.round((count / totalSources) * 100);
+        const sourceRow = document.createElement('div');
+        sourceRow.className = 'legend-item';
+        sourceRow.innerHTML = `<span style="flex:1;">${host}</span><span class="legend-count">${count} (${percent}%)</span>`;
+        statsList.appendChild(sourceRow);
+    });
+}
+
+fetch('/api/delitos')
+.then(r => r.json())
+.then(data => {
+    updateCrimeCounts(data);
+    updateSourceStats(data);
+    updateCityCounts(data);
+    const heatPoints = [];
+    const tipos = new Set();
+    const ciudades = new Set();
+
+    data.forEach(item => {
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lng);
+        const tipo = item.tipo ? item.tipo.trim() : 'Desconocido';
+
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            heatPoints.push([lat, lng, 0.5]);
+
+                    const marker = L.marker([lat, lng], {
+                icon: getMarkerIcon(tipo)
+            });
+            const badgeClass = getBadgeClass(tipo);
+            const rawFecha = item.fecha || null;
+            const sourceUrl = item.url_fuente || item.url || '#';
+            const fechaHtml = `<div style="margin-top:6px; color:#666; font-size:12px;"><strong>Fecha:</strong> ${rawFecha || 'Desconocida'}</div>`;
+            const popupHtml = `
+                <div class="popup-card">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="popup-badge ${badgeClass}"></span>
+                        <div style="flex:1">
+                            <div class="popup-title">${tipo}</div>
+                            <div class="popup-sub">${item.ciudad || ''}</div>
+                        </div>
+                    </div>
+                    ${fechaHtml}
+                    <hr style="margin:8px 0; border:none; border-top:1px solid #eee;" />
+                    <div class="popup-summary">${item.resumen || ''}</div>
+                    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <a class="popup-link" href="${sourceUrl}" target="_blank">Fuente</a>
+                    </div>
+                </div>
+            `;
+            marker.bindPopup(popupHtml, { maxWidth: 320 });
+
+            const ciudadVal = item.ciudad ? item.ciudad.trim() : '';
+            markerItems.push({ marker, tipo, ciudad: ciudadVal, fecha: rawFecha });
+            markersLayer.addLayer(marker);
+            tipos.add(tipo);
+            if (ciudadVal) ciudades.add(ciudadVal);
+        }
+    });
+    tipos.forEach(tipo => {
+        const option = document.createElement('option');
+        option.value = tipo;
+        option.textContent = tipo;
+        filterContainer.appendChild(option);
+    });
+
+    ciudades.forEach(ciudad => {
+        const o = document.createElement('option');
+        o.value = ciudad;
+        o.textContent = ciudad;
+        ciudadFilter.appendChild(o);
+    });
+
+    function applyTypeCityFilter() {
+        const selectedTipo = filterContainer.value;
+        const selectedCiudad = ciudadFilter.value;
+        markersLayer.clearLayers();
+        markerItems.forEach(item => {
+            const tipoOk = (selectedTipo === 'todos') || (item.tipo === selectedTipo);
+            const ciudadOk = (selectedCiudad === 'todas') || (item.ciudad === selectedCiudad);
+            if (tipoOk && ciudadOk) markersLayer.addLayer(item.marker);
+        });
+    }
+
+    filterContainer.addEventListener('change', applyTypeCityFilter);
+    ciudadFilter.addEventListener('change', applyTypeCityFilter);
+
+    if (heatPoints.length) {
+        heatLayer = L.heatLayer(heatPoints, {
+            radius: 50,
+            blur: 15,
+            maxZoom: 17,
+           gradient: {
+  0.0: 'rgba(255, 0, 0, 0.2)',
+  0.5: 'red',
+  0.5: 'darkred'
+}
+        }).addTo(map);
+    }
+
+    L.control.layers(null, {
+        'Marcadores': markersLayer,
+        'Heatmap': heatLayer
+    }).addTo(map);
+});
+
+</script>
+
+</body>
+</html>

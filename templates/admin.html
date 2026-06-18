@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline</title>
+
+<style>
+body{
+    background:#0f172a;
+    color:white;
+    font-family:Arial,sans-serif;
+    display:flex;
+    justify-content:center;
+    margin-top:40px;
+}
+
+.container{
+    width:90%;
+    max-width:1000px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:14px 25px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+#logs{
+    margin-top:20px;
+    background:#111827;
+    border:1px solid #374151;
+    border-radius:10px;
+    padding:20px;
+    height:600px;
+    overflow-y:auto;
+    white-space:pre-wrap;
+    font-family:Consolas, monospace;
+    font-size:14px;
+    color:#22c55e;
+    box-shadow:0 0 20px rgba(0,0,0,.3);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Procesamiento de informacion</h1>
+
+    <button onclick="ejecutar()">
+        Ejecutar
+    </button>
+
+    <div id="logs"></div>
+
+</div>
+
+<script>
+
+function ejecutar() {
+
+    document.getElementById("logs").innerHTML = "";
+
+    const source = new EventSource("/stream?key=ua2026");
+
+    source.onmessage = function(event) {
+
+        let logs = document.getElementById("logs");
+
+        logs.innerHTML += event.data + "\n";
+
+        logs.scrollTop = logs.scrollHeight;
+
+        if(event.data === "=== Pipeline finalizado ==="){
+            source.close();
+        }
+    };
+
+}
+
+</script>
+
+</body>
+</html>
+
