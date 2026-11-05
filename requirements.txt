@@ -6,3 +6,4 @@ requests
 g4f
 flask
 bs4
+gunicorn
