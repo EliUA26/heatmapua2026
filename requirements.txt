@@ -7,3 +7,4 @@ g4f
 flask
 bs4
 gunicorn
+python-dotenv
